@@ -1,11 +1,11 @@
 # This is a generated file; do not edit or check into version control.
-audio_session=/Users/hatemragap/.pub-cache/hosted/pub.dev/audio_session-0.1.15/
+audio_session=/Users/hatemragap/.pub-cache/hosted/pub.dev/audio_session-0.1.16/
 audio_waveforms=/Users/hatemragap/.pub-cache/hosted/pub.dev/audio_waveforms-1.0.4/
 just_audio=/Users/hatemragap/.pub-cache/hosted/pub.dev/just_audio-0.9.34/
 just_audio_web=/Users/hatemragap/.pub-cache/hosted/pub.dev/just_audio_web-0.4.8/
-path_provider=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider-2.0.13/
-path_provider_android=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_android-2.0.22/
-path_provider_foundation=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_foundation-2.1.2/
-path_provider_linux=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_linux-2.1.7/
-path_provider_windows=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_windows-2.1.3/
+path_provider=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider-2.0.15/
+path_provider_android=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_android-2.0.27/
+path_provider_foundation=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_foundation-2.2.3/
+path_provider_linux=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_linux-2.1.11/
+path_provider_windows=/Users/hatemragap/.pub-cache/hosted/pub.dev/path_provider_windows-2.1.7/
 sqflite=/Users/hatemragap/.pub-cache/hosted/pub.dev/sqflite-2.2.8+4/
