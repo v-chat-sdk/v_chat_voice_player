@@ -9,10 +9,10 @@ class Noises extends StatelessWidget {
   final Color activeSliderColor;
 
   const Noises({
-    Key? key,
+    super.key,
     required this.rList,
     required this.activeSliderColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

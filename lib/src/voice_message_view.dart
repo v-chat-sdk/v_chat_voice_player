@@ -21,7 +21,7 @@ class VVoiceMessageView extends StatelessWidget {
   final Function(String speed)? speedBuilder;
 
   const VVoiceMessageView({
-    Key? key,
+    super.key,
     required this.controller,
     this.activeSliderColor = Colors.red,
     this.notActiveSliderColor,
@@ -34,7 +34,7 @@ class VVoiceMessageView extends StatelessWidget {
       fontSize: 11,
       fontWeight: FontWeight.w500,
     ),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

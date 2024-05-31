@@ -32,11 +32,9 @@ class VoicePlayerState extends State<VoicePlayer> {
   @override
   Widget build(BuildContext context) {
     FocusScope.of(context).unfocus();
-
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      onPopInvoked: (bool value) {
         messageController.dispose();
-        return true;
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

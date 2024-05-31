@@ -9,3 +9,7 @@
 
 ## 1.0.0
 - Support Dart 3
+
+
+## 2.0.0
+- Support Flutter V3.22
