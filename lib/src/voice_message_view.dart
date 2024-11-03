@@ -6,20 +6,43 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:v_chat_voice_player/src/voice_message_controller.dart';
 
-import 'helpers/utils.dart';
-import 'widgets/noises.dart';
-
+/// A widget that displays a voice message player with play/pause controls,
+/// a seek bar, and speed control.
+///
+/// The seek bar visualizes the playback progress and allows users to seek
+/// within the audio. It also includes an optional noise visualization.
 class VVoiceMessageView extends StatelessWidget {
+  /// The controller managing the voice message playback.
   final VVoiceMessageController controller;
-  final Color activeSliderColor;
-  final Color? notActiveSliderColor;
-  final Color? backgroundColor;
-  final TextStyle counterTextStyle;
-  final Widget? playIcon;
-  final Widget? pauseIcon;
-  final Widget? errorIcon;
-  final Function(String speed)? speedBuilder;
 
+  /// The color of the active part of the seek bar.
+  final Color activeSliderColor;
+
+  /// The color of the inactive part of the seek bar.
+  final Color? notActiveSliderColor;
+
+  /// The background color of the player container.
+  final Color? backgroundColor;
+
+  /// The text style for the remaining time counter.
+  final TextStyle counterTextStyle;
+
+  /// Custom widget for the play icon.
+  final Widget? playIcon;
+
+  /// Custom widget for the pause icon.
+  final Widget? pauseIcon;
+
+  /// Custom widget for the error icon.
+  final Widget? errorIcon;
+
+  /// Builder function for customizing the speed display widget.
+  final Widget Function(String speed)? speedBuilder;
+
+  /// Creates a [VVoiceMessageView].
+  ///
+  /// [controller] is required and manages the playback state.
+  /// Other parameters are optional and allow customization of the UI.
   const VVoiceMessageView({
     super.key,
     required this.controller,
@@ -30,117 +53,49 @@ class VVoiceMessageView extends StatelessWidget {
     this.pauseIcon,
     this.errorIcon,
     this.speedBuilder,
-    this.counterTextStyle = const TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-    ),
+    this.counterTextStyle =
+        const TextStyle(fontSize: 10, fontWeight: FontWeight.w400, height: .5),
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final newTHeme = theme.copyWith(
-      sliderTheme: SliderThemeData(
-        trackShape: CustomTrackShape(),
-        thumbShape: SliderComponentShape.noThumb,
-        minThumbSeparation: 0,
-      ),
+    // Customize the Slider theme to match the desired appearance.
+    final SliderThemeData customSliderTheme = SliderTheme.of(context).copyWith(
+      activeTrackColor: activeSliderColor,
+      inactiveTrackColor:
+          notActiveSliderColor ?? activeSliderColor.withOpacity(0.4),
+      thumbColor: activeSliderColor,
+      overlayColor: activeSliderColor.withOpacity(0.2),
+      trackHeight: 2.0,
+      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+      overlayShape: const RoundSliderOverlayShape(overlayRadius: 12.0),
+      trackShape: const RoundedRectSliderTrackShape(),
     );
 
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(13),
-        color: backgroundColor,
+        color: backgroundColor ?? Colors.grey.shade200,
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       child: ValueListenableBuilder(
         valueListenable: controller,
         builder: (context, value, child) {
           return Row(
             mainAxisSize: MainAxisSize.min,
-            //crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
-                width: 5,
-              ),
-              if (controller.isDownloading)
-                const SizedBox(
-                  height: 38,
-                  width: 38,
-                  child: CupertinoActivityIndicator(),
-                )
-              else if (controller.isPlaying)
-                InkWell(
-                  onTap: controller.pausePlaying,
-                  child: pauseIcon ?? _pauseIcon,
-                )
-              else if (controller.isDownloadError)
-                InkWell(
-                  onTap: controller.initAndPlay,
-                  child: errorIcon ?? _errorIcon,
-                )
-              else
-                InkWell(
-                  onTap: controller.initAndPlay,
-                  child: playIcon ?? _playIcon,
-                ),
-              const SizedBox(
-                width: 5,
-              ),
-              Flexible(
+              // Play/Pause/Error Button
+              _buildPlayPauseErrorButton(),
+              const SizedBox(width: 8),
+              // Seek Bar and Remaining Time
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      height: 30,
-                      width: controller.noiseWidth,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Noises(
-                            rList: controller.randoms,
-                            activeSliderColor: activeSliderColor,
-                          ),
-                          AnimatedBuilder(
-                            animation: CurvedAnimation(
-                              parent: controller.animController,
-                              curve: Curves.ease,
-                            ),
-                            builder: (BuildContext context, Widget? child) {
-                              return Positioned(
-                                left: controller.animController.value,
-                                child: Container(
-                                  width: controller.noiseWidth,
-                                  height: 6.w(),
-                                  color: notActiveSliderColor ??
-                                      activeSliderColor.withOpacity(.4),
-                                ),
-                              );
-                            },
-                          ),
-                          Opacity(
-                            opacity: .0,
-                            child: SizedBox(
-                              width: controller.noiseWidth,
-                              //color: Colors.amber.withOpacity(1),
-                              child: Theme(
-                                data: newTHeme,
-                                child: Slider(
-                                  value: controller.currentMillSeconds,
-                                  max: controller.maxMillSeconds,
-                                  onChangeStart: controller.onChangeSliderStart,
-                                  onChanged: controller.onChanging,
-                                  onChangeEnd: (value) {
-                                    controller.onSeek(
-                                      Duration(milliseconds: value.toInt()),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Seek Bar with Optional Noise Visualization
+                    _buildSeekBar(customSliderTheme),
+
+                    // Remaining Time
                     Text(
                       controller.remindingTime,
                       style: counterTextStyle,
@@ -148,36 +103,9 @@ class VVoiceMessageView extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(
-                width: 5,
-              ),
-              Transform.translate(
-                offset: const Offset(0, -7),
-                child: InkWell(
-                  onTap: controller.changeSpeed,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 3,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      controller.playSpeedStr,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(
-                width: 10,
-              ),
+              const SizedBox(width: 8),
+              // Speed Control Button
+              _buildSpeedControl(),
             ],
           );
         },
@@ -185,28 +113,77 @@ class VVoiceMessageView extends StatelessWidget {
     );
   }
 
-  // Function _speedBuilder = (String speed) {
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(
-  //       horizontal: 3,
-  //       vertical: 2,
-  //     ),
-  //     decoration: BoxDecoration(
-  //       color: Colors.red,
-  //       borderRadius: BorderRadius.circular(4),
-  //     ),
-  //     child: Text(
-  //       speed,
-  //       style: const TextStyle(
-  //         color: Colors.white,
-  //         fontSize: 10,
-  //         fontWeight: FontWeight.bold,
-  //       ),
-  //     ),
-  //   );
-  // };
+  /// Builds the Play/Pause/Error button based on the current playback state.
+  Widget _buildPlayPauseErrorButton() {
+    if (controller.isDownloading) {
+      return const SizedBox(
+        height: 38,
+        width: 38,
+        child: CupertinoActivityIndicator(),
+      );
+    } else if (controller.isPlaying) {
+      return InkWell(
+        onTap: controller.pausePlaying,
+        child: pauseIcon ?? _defaultPauseIcon,
+      );
+    } else if (controller.isDownloadError) {
+      return InkWell(
+        onTap: controller.initAndPlay,
+        child: errorIcon ?? _defaultErrorIcon,
+      );
+    } else {
+      return InkWell(
+        onTap: controller.initAndPlay,
+        child: playIcon ?? _defaultPlayIcon,
+      );
+    }
+  }
 
-  Widget get _pauseIcon => Container(
+  /// Builds the seek bar with optional noise visualization.
+  ///
+  /// [sliderTheme] customizes the appearance of the Slider.
+  Widget _buildSeekBar(SliderThemeData sliderTheme) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // // Optional Noise Visualization
+        // if (controller.randoms.isNotEmpty)
+        //   Noises(
+        //     rList: controller.randoms,
+        //     activeSliderColor: activeSliderColor,
+        //   ),
+        // Slider Positioned on Top
+        SliderTheme(
+          data: sliderTheme,
+          child: Slider(
+            value: controller.currentMillSeconds,
+            min: 0.0,
+            max: controller.maxMillSeconds,
+            onChangeStart: controller.onChangeSliderStart,
+            onChanged: controller.onChanging,
+            onChangeEnd: (value) {
+              controller.onSeek(
+                Duration(milliseconds: value.toInt()),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Builds the speed control button.
+  Widget _buildSpeedControl() {
+    return InkWell(
+      onTap: controller.changeSpeed,
+      child: speedBuilder != null
+          ? speedBuilder!(controller.playSpeedStr)
+          : _defaultSpeedButton(),
+    );
+  }
+
+  /// Default Pause Icon Widget.
+  Widget get _defaultPauseIcon => Container(
         height: 38,
         width: 38,
         decoration: const BoxDecoration(
@@ -219,7 +196,8 @@ class VVoiceMessageView extends StatelessWidget {
         ),
       );
 
-  Widget get _playIcon => Container(
+  /// Default Play Icon Widget.
+  Widget get _defaultPlayIcon => Container(
         height: 38,
         width: 38,
         decoration: const BoxDecoration(
@@ -232,7 +210,8 @@ class VVoiceMessageView extends StatelessWidget {
         ),
       );
 
-  Widget get _errorIcon => Container(
+  /// Default Error Icon Widget.
+  Widget get _defaultErrorIcon => Container(
         height: 38,
         width: 38,
         decoration: const BoxDecoration(
@@ -244,8 +223,26 @@ class VVoiceMessageView extends StatelessWidget {
           color: Colors.white,
         ),
       );
+
+  /// Default Speed Control Button Widget.
+  Widget _defaultSpeedButton() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          controller.playSpeedStr,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
 }
 
+/// A custom track shape for the Slider to remove padding and align it properly.
 class CustomTrackShape extends RoundedRectSliderTrackShape {
   @override
   Rect getPreferredRect({
@@ -255,10 +252,10 @@ class CustomTrackShape extends RoundedRectSliderTrackShape {
     bool isEnabled = false,
     bool isDiscrete = false,
   }) {
-    final double? trackHeight = sliderTheme.trackHeight;
+    final double trackHeight = sliderTheme.trackHeight ?? 2.0;
     final double trackLeft = offset.dx;
     final double trackTop =
-        offset.dy + (parentBox.size.height - trackHeight!) / 2;
+        offset.dy + (parentBox.size.height - trackHeight) / 2;
     final double trackWidth = parentBox.size.width;
     return Rect.fromLTWH(trackLeft, trackTop, trackWidth, trackHeight);
   }
