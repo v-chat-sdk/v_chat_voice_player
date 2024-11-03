@@ -13,3 +13,7 @@
 
 ## 2.0.0
 - Support Flutter V3.22
+- 
+## 2.1.0
+- Fix slider
+- Upgrade packages
