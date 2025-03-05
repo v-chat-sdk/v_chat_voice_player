@@ -3,13 +3,16 @@
 // MIT license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart' as cache;
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:path/path.dart';
 import 'package:v_chat_voice_player/src/helpers/utils.dart';
 import 'package:v_platform/v_platform.dart';
 
@@ -25,7 +28,7 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
 
   /// The maximum duration of the audio.
   late Duration maxDuration;
-
+  VlcPlayerController? vlcPlayerController;
   Duration _currentDuration = Duration.zero;
 
   /// Callback function when playback completes.
@@ -119,7 +122,11 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
         await _setMaxDurationForJs();
       } else {
         final path = await _getFileFromCache();
-        await _setMaxDurationForIo(path);
+        if (_isIosWebm) {
+          await _initAndPlayForIosWebm(path);
+        } else {
+          await _setMaxDurationForIo(path);
+        }
       }
       _player.play();
       await _player.setSpeed(_speed.getSpeed);
@@ -140,6 +147,7 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
     _player.pause();
     _playStatus = PlayStatus.pause;
     _updateUi();
+    vlcPlayerController?.pause();
     onPause?.call(id);
   }
 
@@ -151,6 +159,47 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
     _updateUi();
     _player.seek(duration);
   }
+
+  Future _initAndPlayForIosWebm(String path) async {
+    if (vlcPlayerController != null) {
+      await vlcPlayerController!.dispose();
+      //await videoPlayerController!.stopRendererScanning();
+      vlcPlayerController = null;
+    }
+    vlcPlayerController ??= VlcPlayerController.file(
+      File(path),
+      hwAcc: HwAcc.full,
+      options: VlcPlayerOptions(
+        advanced: VlcAdvancedOptions([
+          VlcAdvancedOptions.networkCaching(2000),
+        ]),
+        subtitle: VlcSubtitleOptions([
+          VlcSubtitleOptions.boldStyle(true),
+          VlcSubtitleOptions.fontSize(30),
+          VlcSubtitleOptions.outlineColor(VlcSubtitleColor.yellow),
+          VlcSubtitleOptions.outlineThickness(VlcSubtitleThickness.normal),
+          // works only on externally added subtitles
+          VlcSubtitleOptions.color(VlcSubtitleColor.navy),
+        ]),
+        http: VlcHttpOptions([
+          VlcHttpOptions.httpReconnect(true),
+        ]),
+        rtp: VlcRtpOptions([
+          VlcRtpOptions.rtpOverRtsp(true),
+        ]),
+      ),
+      autoInitialize: true,
+    );
+    //await videoPlayerController!.initialize();
+    _updateUi();
+    await Future.delayed(const Duration(milliseconds: 500));
+    //await videoPlayerController!.initialize();
+    _playStatus = PlayStatus.playing;
+    _updateUi();
+  }
+  bool get _isIosWebm =>
+      VPlatforms.isIOS &&
+      (audioSrc.extension == ".webm" || audioSrc.extension == ".opus");
 
   /// Called when the user starts interacting with the playback slider.
   /// Pauses the audio and prepares for seeking.
@@ -222,11 +271,14 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
   }
 
   @override
-  void dispose() {
+  void dispose()async {
     _player.dispose();
     _positionStream?.cancel();
     _playerStateStream?.cancel();
+
     animController.dispose();
+    await vlcPlayerController?.stop();
+    await vlcPlayerController?.dispose();
     super.dispose();
   }
 
@@ -260,6 +312,8 @@ class VVoiceMessageController extends ValueNotifier implements TickerProvider {
       _updateUi();
       if (position.inMilliseconds >= maxMillSeconds) {
         await _player.stop();
+        vlcPlayerController?.stop();
+        vlcPlayerController?.seekTo(Duration.zero);
         _currentDuration = Duration.zero;
         _playStatus = PlayStatus.init;
         animController.reset();
