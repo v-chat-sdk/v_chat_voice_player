@@ -20,3 +20,6 @@
 ## 2.2.0
 - Add flutter_audio_waveforms
 - Upgrade packages
+
+## 2.2.1
+- update packages
