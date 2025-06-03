@@ -23,3 +23,5 @@
 
 ## 2.2.1
 - update packages
+## 2.2.2
+- update packages
