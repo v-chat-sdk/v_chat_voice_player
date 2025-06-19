@@ -3,22 +3,25 @@
 // MIT license that can be found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart' as cache;
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:v_platform/v_platform.dart';
 
 import 'helpers/play_status.dart';
 import 'helpers/voice_state_manager.dart';
 import 'voice_state_model.dart';
+import 'services/voice_cache_service.dart';
+import 'services/voice_vlc_service.dart';
+import 'services/voice_audio_service.dart';
 
 /// A controller for handling voice message playback following ValueNotifier best practices.
 /// This controller manages all voice player state and provides a clean API for the UI.
+///
+/// The controller has been refactored to use separate service classes for better separation
+/// of concerns and improved readability.
 class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     implements TickerProvider {
   /// The source of the audio file.
@@ -36,17 +39,14 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   /// The unique identifier for the voice message.
   final String id;
 
-  late final AudioPlayer _audioPlayer;
-  VlcPlayerController? _vlcPlayerController;
-
-  // Stream subscriptions for proper cleanup
-  StreamSubscription<Duration>? _positionSubscription;
-  StreamSubscription<PlayerState>? _playerStateSubscription;
-  StreamSubscription<Duration>? _durationSubscription;
+  // Service dependencies
+  final _cacheService = VoiceCacheService();
+  final _vlcService = VoiceVlcService();
+  late final VoiceAudioService _audioService;
 
   // Internal state tracking
   Duration _currentDuration = Duration.zero;
-  Duration _maxDuration = const Duration(days: 1);
+  Duration _maxDuration = const Duration(minutes: 25);
   PlayStatus _playStatus = PlayStatus.init;
   PlaySpeed _speed = PlaySpeed.x1;
   bool _isSeeking = false;
@@ -62,47 +62,32 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     this.onPause,
     this.onPlaying,
   }) : super(VoiceStateModel.initial(maxDuration: maxDuration, id: id)) {
-    _maxDuration = maxDuration ?? const Duration(days: 1);
+    _maxDuration = maxDuration ?? const Duration(minutes: 25);
     _initializeController();
   }
 
-  // Public getters for backward compatibility
-  /// Whether the audio is currently playing
-  bool get isPlaying => value.isPlaying;
+  /// Initializes the controller and services
+  void _initializeController() {
+    _setupAudioService();
+    _updateState(); // Initial state update
+  }
 
-  /// Whether the audio player is initialized
-  bool get isInit => value.isInit;
+  /// Sets up the audio service with event callbacks
+  void _setupAudioService() {
+    _audioService = VoiceAudioService(
+      onPositionChanged: _handlePositionChanged,
+      onStateChanged: _handlePlayerStateChanged,
+      onDurationChanged: _handleDurationChanged,
+      onError: _handleError,
+    );
+  }
 
-  /// Whether the audio is currently downloading
-  bool get isDownloading => value.isDownloading;
-
-  /// Whether there was an error downloading the audio
-  bool get isDownloadError => value.isDownloadError;
-
-  /// Whether the audio playback is stopped
-  bool get isStop => value.isStop;
-
-  /// Whether the audio playback is paused
-  bool get isPause => value.isPause;
-
-  /// Gets the current playback position in milliseconds
-  double get currentMillSeconds => value.currentMillSeconds;
-
-  /// Gets the maximum duration of the audio in milliseconds
-  double get maxMillSeconds => value.maxMillSeconds;
-
-  /// Gets the current playback speed as a string
-  String get playSpeedStr => value.speedDisplayText;
-
-  /// Gets the formatted remaining time of the audio playback
-  String get remindingTime => value.remainingTimeText;
-
-  /// Initializes the audio player and starts playback
+  /// Initializes and starts audio playback
   Future<void> initAndPlay() async {
     await _setPlaybackState(PlayStatus.downloading);
 
     try {
-      if (_isIosWebm) {
+      if (_vlcService.isVlcRequired(audioSrc)) {
         await _initAndPlayVlc();
       } else {
         await _initAndPlayAudio();
@@ -115,8 +100,11 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
 
   /// Pauses the audio playback
   void pausePlaying() {
-    _audioPlayer.pause();
-    _vlcPlayerController?.pause();
+    if (_vlcService.isVlcRequired(audioSrc)) {
+      _vlcService.pause();
+    } else {
+      _audioService.pause();
+    }
     _setPlaybackState(PlayStatus.pause);
     onPause?.call(id);
   }
@@ -124,10 +112,10 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   /// Resumes the audio playback from current position
   Future<void> _resumePlayback() async {
     try {
-      if (_isIosWebm && _vlcPlayerController != null) {
-        await _vlcPlayerController!.play();
+      if (_vlcService.isVlcRequired(audioSrc)) {
+        await _vlcService.play();
       } else {
-        await _audioPlayer.resume();
+        await _audioService.play();
       }
       _isListened = true;
       await _setPlaybackState(PlayStatus.playing);
@@ -148,18 +136,17 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     _updateState();
 
     try {
-      if (_isIosWebm && _vlcPlayerController != null) {
-        await _vlcPlayerController!.seekTo(duration);
+      if (_vlcService.isVlcRequired(audioSrc)) {
+        await _vlcService.seekTo(duration);
       } else {
-        await _audioPlayer.seek(duration);
+        await _audioService.seek(duration);
       }
 
       // Add a small delay to ensure seek operation is completed
       await Future.delayed(const Duration(milliseconds: 100));
 
       // Restore the previous playback state
-      if (wasPlayingBeforeSeeking && !isPlaying) {
-        // Resume playing if we were playing before seeking
+      if (wasPlayingBeforeSeeking && !value.isPlaying) {
         await _resumePlayback();
       }
     } catch (error) {
@@ -172,13 +159,13 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
 
   /// Called when the user starts interacting with the playback slider
   /// Remembers the current playback state and pauses if playing
-  void onChangeSliderStart(double value) {
+  void onChangeSliderStart(double x) {
     _isSeeking = true;
     // Remember if we were playing before seeking
-    _wasPlayingBeforeSeek = isPlaying;
+    _wasPlayingBeforeSeek = value.isPlaying;
 
     // Only pause if currently playing
-    if (isPlaying) {
+    if (value.isPlaying) {
       pausePlaying();
     }
   }
@@ -186,7 +173,6 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   /// Updates the current playback position while the user is interacting with the slider
   void onChanging(double value) {
     _currentDuration = Duration(milliseconds: value.toInt());
-
     _updateState();
   }
 
@@ -194,8 +180,8 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   Future<void> changeSpeed() async {
     _speed = _speed.next;
 
-    if (!_isIosWebm) {
-      await _audioPlayer.setPlaybackRate(_speed.getSpeed);
+    if (!_vlcService.isVlcRequired(audioSrc)) {
+      await _audioService.setPlaybackRate(_speed.getSpeed);
     }
     _updateState();
   }
@@ -206,136 +192,34 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     super.dispose();
   }
 
-  // Private initialization methods
-  void _initializeController() {
-    _setupAudioPlayer();
-    _updateState(); // Initial state update
-  }
-
-  void _setupAudioPlayer() {
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.setPlayerMode(PlayerMode.mediaPlayer);
-    _setupAudioListeners();
-  }
-
-  void _setupAudioListeners() {
-    _listenToPositionStream();
-    _listenToPlayerStateStream();
-    _listenToDurationStream();
-  }
-
   // Private audio playback methods
   Future<void> _initAndPlayAudio() async {
-    await _initializeAudioSource();
-    await _audioPlayer.resume();
-    await _audioPlayer.setPlaybackRate(_speed.getSpeed);
+    await _audioService.setSource(audioSrc);
+
+    if (_currentDuration != Duration.zero) {
+      await _audioService.seek(_currentDuration);
+    }
+
+    await _audioService.play();
+    await _audioService.setPlaybackRate(_speed.getSpeed);
     _isListened = true;
     await _setPlaybackState(PlayStatus.playing);
     onPlaying?.call(id);
-  }
-
-  Future<void> _initializeAudioSource() async {
-    try {
-      final source = await _createAudioSource();
-      await _audioPlayer.setSource(source);
-
-      if (_currentDuration != Duration.zero) {
-        await _audioPlayer.seek(_currentDuration);
-      }
-    } catch (error) {
-      _handleError("Error initializing audio source", error);
-      rethrow;
-    }
-  }
-
-  Future<Source> _createAudioSource() async {
-    if (_isFile) {
-      return DeviceFileSource(audioSrc.fileLocalPath!);
-    } else if (_isUrl) {
-      return UrlSource(audioSrc.fullNetworkUrl!);
-    } else if (_isBytes) {
-      return BytesSource(Uint8List.fromList(audioSrc.bytes!));
-    } else {
-      throw Exception('Unsupported audio source type');
-    }
   }
 
   // Private VLC methods
   Future<void> _initAndPlayVlc() async {
-    final path = await _getFileFromCache();
-    await _setupVlcPlayer(path);
-    await Future.delayed(const Duration(milliseconds: 500));
+    final path = await _cacheService.getFileFromCache(audioSrc);
+    await _vlcService.initializeAndPlay(path);
     _isListened = true;
     await _setPlaybackState(PlayStatus.playing);
     onPlaying?.call(id);
-  }
-
-  Future<void> _setupVlcPlayer(String path) async {
-    await _disposeVlcPlayer();
-
-    _vlcPlayerController = VlcPlayerController.file(
-      File(path),
-      hwAcc: HwAcc.full,
-      options: _createVlcOptions(),
-      autoInitialize: true,
-    );
-  }
-
-  VlcPlayerOptions _createVlcOptions() {
-    return VlcPlayerOptions(
-      advanced: VlcAdvancedOptions([
-        VlcAdvancedOptions.networkCaching(2000),
-      ]),
-      subtitle: VlcSubtitleOptions([
-        VlcSubtitleOptions.boldStyle(true),
-        VlcSubtitleOptions.fontSize(30),
-        VlcSubtitleOptions.outlineColor(VlcSubtitleColor.yellow),
-        VlcSubtitleOptions.outlineThickness(VlcSubtitleThickness.normal),
-        VlcSubtitleOptions.color(VlcSubtitleColor.navy),
-      ]),
-      http: VlcHttpOptions([
-        VlcHttpOptions.httpReconnect(true),
-      ]),
-      rtp: VlcRtpOptions([
-        VlcRtpOptions.rtpOverRtsp(true),
-      ]),
-    );
-  }
-
-  Future<void> _disposeVlcPlayer() async {
-    if (_vlcPlayerController != null) {
-      await _vlcPlayerController!.dispose();
-      _vlcPlayerController = null;
-    }
-  }
-
-  // Private stream listeners
-  void _listenToPositionStream() {
-    _positionSubscription = _audioPlayer.onPositionChanged.listen(
-      _handlePositionChanged,
-      onError: (error) => _handleError('Position stream error', error),
-    );
-  }
-
-  void _listenToPlayerStateStream() {
-    _playerStateSubscription = _audioPlayer.onPlayerStateChanged.listen(
-      _handlePlayerStateChanged,
-      onError: (error) => _handleError('Player state stream error', error),
-    );
-  }
-
-  void _listenToDurationStream() {
-    _durationSubscription = _audioPlayer.onDurationChanged.listen(
-      _handleDurationChanged,
-      onError: (error) => _handleError('Duration stream error', error),
-    );
   }
 
   // Private event handlers
   Future<void> _handlePositionChanged(Duration position) async {
     if (!_isSeeking) {
       _currentDuration = position;
-
       _updateState();
 
       if (position >= _maxDuration) {
@@ -377,9 +261,13 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   }
 
   Future<void> _handlePlaybackCompletion() async {
-    await _audioPlayer.stop();
-    _vlcPlayerController?.stop();
-    _vlcPlayerController?.seekTo(Duration.zero);
+    if (_vlcService.isVlcRequired(audioSrc)) {
+      await _vlcService.stop();
+      await _vlcService.seekTo(Duration.zero);
+    } else {
+      await _audioService.stop();
+    }
+
     _currentDuration = Duration.zero;
     await _setPlaybackState(PlayStatus.init);
     onComplete?.call(id);
@@ -401,20 +289,6 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     );
   }
 
-  Future<String> _getFileFromCache() async {
-    if (_isFile) {
-      return audioSrc.fileLocalPath!;
-    }
-    if (_isBytes) {
-      throw Exception('Bytes audio source not supported for cached playback');
-    }
-    final file = await cache.DefaultCacheManager().getSingleFile(
-      audioSrc.fullNetworkUrl!,
-      key: audioSrc.getCachedUrlKey,
-    );
-    return file.path;
-  }
-
   void _handleError(String message, dynamic error) {
     if (kDebugMode) {
       print('$message: $error');
@@ -422,23 +296,9 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   }
 
   Future<void> _cleanupResources() async {
-    await _positionSubscription?.cancel();
-    await _playerStateSubscription?.cancel();
-    await _durationSubscription?.cancel();
-    await _audioPlayer.dispose();
-    await _disposeVlcPlayer();
+    await _audioService.dispose();
+    await _vlcService.dispose();
   }
-
-  // Private getters for audio source type
-  bool get _isFile => audioSrc.isFromPath;
-
-  bool get _isBytes => audioSrc.isFromBytes;
-
-  bool get _isUrl => audioSrc.isFromUrl;
-
-  bool get _isIosWebm =>
-      VPlatforms.isIOS &&
-      (audioSrc.extension == ".webm" || audioSrc.extension == ".opus");
 
   @override
   Ticker createTicker(TickerCallback onTick) => Ticker(onTick);

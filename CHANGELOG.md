@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2024-12-19
+Refactor: Extract audio, VLC, and cache services
+
+This commit introduces three new service classes to improve the organization and maintainability of audio-related functionalities:
+
+- `VoiceAudioService`: Manages standard audio playback using `audioplayers`.
+- `VoiceVlcService`: Handles VLC-specific playback, particularly for WebM/Opus files on iOS.
+- `VoiceCacheService`: Manages caching of audio files using `flutter_cache_manager`.
+
+This refactoring separates concerns, making the codebase cleaner and easier to understand.
+
 ## [3.1.0] - 2024-12-19
 
 ### 🚨 Breaking Changes

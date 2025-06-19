@@ -63,7 +63,7 @@ class HomeController extends GetxController {
   void onPlaying(String id) {
     for (var e in _voiceControllers) {
       if (e.id != id) {
-        if (e.controller.isPlaying) {
+        if (e.controller.value.isPlaying) {
           e.controller.pausePlaying();
         }
       }

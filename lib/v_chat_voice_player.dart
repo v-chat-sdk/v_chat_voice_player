@@ -10,6 +10,7 @@
 /// - Cross-platform compatibility (including VLC for iOS WebM)
 /// - Customizable UI components
 /// - Performance optimized with proper resource management
+/// - Modular architecture with separate service classes for better maintainability
 library v_chat_voice_player;
 
 // Core Components
@@ -17,14 +18,3 @@ export 'src/voice_message_controller.dart';
 export 'src/voice_message_view.dart';
 export 'src/voice_state_model.dart';
 export 'src/voice_message_config.dart';
-
-// Helpers
-export 'src/helpers/play_status.dart';
-export 'src/helpers/utils.dart';
-export 'src/helpers/v_voice_language.dart';
-export 'src/helpers/voice_state_manager.dart';
-export 'src/helpers/voice_ui_randomizer.dart';
-
-// Widgets
-export 'src/widgets/noises.dart';
-export 'src/widgets/voice_visualizer.dart';
