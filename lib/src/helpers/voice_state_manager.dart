@@ -55,6 +55,7 @@ class VoiceStateManager {
     required bool isSeeking,
     required Duration currentDuration,
     required Duration maxDuration,
+    bool? isListened,
   }) {
     final currentMs = calculateCurrentMillSeconds(currentDuration, maxDuration);
     final maxMs = maxDuration.inMilliseconds.toDouble();
@@ -75,6 +76,7 @@ class VoiceStateManager {
       ),
       speedDisplayText: speed.displayString,
       isAnimating: playStatus == PlayStatus.playing,
+      isListened: isListened ?? false,
     );
   }
 

@@ -51,6 +51,7 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
   PlaySpeed _speed = PlaySpeed.x1;
   bool _isSeeking = false;
   bool _wasPlayingBeforeSeek = false;
+  bool _isListened = false;
 
   /// Creates a new [VVoiceMessageController] with proper initialization
   VVoiceMessageController({
@@ -122,36 +123,51 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
 
   /// Resumes the audio playback from current position
   Future<void> _resumePlayback() async {
-    if (_isIosWebm && _vlcPlayerController != null) {
-      await _vlcPlayerController!.play();
-    } else {
-      await _audioPlayer.resume();
+    try {
+      if (_isIosWebm && _vlcPlayerController != null) {
+        await _vlcPlayerController!.play();
+      } else {
+        await _audioPlayer.resume();
+      }
+      _isListened = true;
+      await _setPlaybackState(PlayStatus.playing);
+      onPlaying?.call(id);
+    } catch (error) {
+      _handleError('Error resuming playback', error);
+      await _setPlaybackState(PlayStatus.pause);
     }
-    await _setPlaybackState(PlayStatus.playing);
-    onPlaying?.call(id);
   }
 
   /// Seeks the audio playback to the specified duration
   /// Restores the previous playback state after seeking
   Future<void> onSeek(Duration duration) async {
+    final wasPlayingBeforeSeeking = _wasPlayingBeforeSeek;
+
     _isSeeking = false;
     _currentDuration = duration;
     _updateState();
 
-    if (_isIosWebm && _vlcPlayerController != null) {
-      await _vlcPlayerController!.seekTo(duration);
-    } else {
-      await _audioPlayer.seek(duration);
-    }
+    try {
+      if (_isIosWebm && _vlcPlayerController != null) {
+        await _vlcPlayerController!.seekTo(duration);
+      } else {
+        await _audioPlayer.seek(duration);
+      }
 
-    // Restore the previous playback state
-    if (_wasPlayingBeforeSeek && !isPlaying) {
-      // Resume playing if we were playing before seeking
-      await _resumePlayback();
-    }
+      // Add a small delay to ensure seek operation is completed
+      await Future.delayed(const Duration(milliseconds: 100));
 
-    // Reset the seeking state flag
-    _wasPlayingBeforeSeek = false;
+      // Restore the previous playback state
+      if (wasPlayingBeforeSeeking && !isPlaying) {
+        // Resume playing if we were playing before seeking
+        await _resumePlayback();
+      }
+    } catch (error) {
+      _handleError('Error during seek operation', error);
+    } finally {
+      // Reset the seeking state flag
+      _wasPlayingBeforeSeek = false;
+    }
   }
 
   /// Called when the user starts interacting with the playback slider
@@ -213,6 +229,7 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     await _initializeAudioSource();
     await _audioPlayer.resume();
     await _audioPlayer.setPlaybackRate(_speed.getSpeed);
+    _isListened = true;
     await _setPlaybackState(PlayStatus.playing);
     onPlaying?.call(id);
   }
@@ -248,6 +265,7 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
     final path = await _getFileFromCache();
     await _setupVlcPlayer(path);
     await Future.delayed(const Duration(milliseconds: 500));
+    _isListened = true;
     await _setPlaybackState(PlayStatus.playing);
     onPlaying?.call(id);
   }
@@ -379,6 +397,7 @@ class VVoiceMessageController extends ValueNotifier<VoiceStateModel>
       isSeeking: _isSeeking,
       currentDuration: _currentDuration,
       maxDuration: _maxDuration,
+      isListened: _isListened,
     );
   }
 

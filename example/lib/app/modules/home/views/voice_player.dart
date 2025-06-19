@@ -50,8 +50,180 @@ class VoicePlayerState extends State<VoicePlayer> {
                   if (isLoading)
                     const CircularProgressIndicator.adaptive()
                   else
-                    VVoiceMessageView(
-                      controller: messageController,
+                    Column(
+                      children: [
+                        // Default Voice Visualizer
+                        Container(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Default Voice Visualizer:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              VVoiceMessageView(
+                                controller: messageController,
+                                visualizerConfig: const VoiceVisualizerConfig(
+                                  useRandomHeights: true,
+                                  showVisualizer: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Highly Customized Voice Visualizer
+                        Container(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Highly Customized Voice Visualizer:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              VVoiceMessageView(
+                                controller: messageController,
+                                // Visualizer customization
+                                visualizerConfig: const VoiceVisualizerConfig(
+                                  useRandomHeights: false,
+                                  showVisualizer: true,
+                                  height: 50,
+                                  barCount: 40,
+                                  barSpacing: 3.0,
+                                  minBarHeight: 6.0,
+                                  enableBarAnimations: true,
+                                ),
+                                // Colors
+                                colorConfig: VoiceColorConfig(
+                                  activeSliderColor: Colors.deepPurple,
+                                  notActiveSliderColor: Colors.purple.shade100,
+                                ),
+                                // Container styling
+                                containerConfig: VoiceContainerConfig(
+                                  backgroundColor: Colors.purple.shade50,
+                                  borderRadius: 25,
+                                  containerPadding: const EdgeInsets.all(16),
+                                ),
+                                // Button customization
+                                buttonConfig: const VoiceButtonConfig(
+                                  buttonColor: Colors.deepPurple,
+                                  buttonIconColor: Colors.white,
+                                  buttonSize: 45,
+                                ),
+                                // Speed button customization
+                                speedConfig: const VoiceSpeedConfig(
+                                  speedButtonColor: Colors.purple,
+                                  speedButtonTextColor: Colors.white,
+                                  speedButtonBorderRadius: 10,
+                                  speedButtonPadding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Voice Player with User Avatar and Mic Icon
+                        Container(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'With User Avatar & Mic Icon:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              VVoiceMessageView(
+                                controller: messageController,
+                                visualizerConfig: const VoiceVisualizerConfig(
+                                  showVisualizer: true,
+                                ),
+                                colorConfig: const VoiceColorConfig(
+                                  activeSliderColor: Colors.blue,
+                                ),
+                                containerConfig: VoiceContainerConfig(
+                                  backgroundColor: Colors.blue.shade50,
+                                  borderRadius: 20,
+                                ),
+                                buttonConfig: const VoiceButtonConfig(
+                                  useSimplePlayIcon: true,
+                                  simpleIconSize:
+                                      39.0, // Larger icon size for better visibility
+                                ),
+                                avatarConfig: VoiceAvatarConfig(
+                                  userAvatar: Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 30,
+                                    ),
+                                  ),
+                                  avatarSize: 45,
+                                  micIconSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Traditional Slider Version
+                        Container(
+                          margin: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Traditional Slider:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              VVoiceMessageView(
+                                controller: messageController,
+                                visualizerConfig: const VoiceVisualizerConfig(
+                                  showVisualizer: false,
+                                ),
+                                colorConfig: const VoiceColorConfig(
+                                  activeSliderColor: Colors.green,
+                                ),
+                                containerConfig: VoiceContainerConfig(
+                                  backgroundColor: Colors.green.shade50,
+                                  borderRadius: 15,
+                                ),
+                                buttonConfig: const VoiceButtonConfig(
+                                  buttonColor: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   const SizedBox(
                     height: 15,

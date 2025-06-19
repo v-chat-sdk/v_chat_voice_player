@@ -124,6 +124,23 @@ class HomeViewState extends State<HomeView> {
             return VVoiceMessageView(
               controller: controller.getVoiceController(voicesList[i]),
               key: ValueKey(voicesList[i].id),
+              colorConfig: const VoiceColorConfig(
+                activeSliderColor: Colors.red,
+                notActiveSliderColor: Colors.grey,
+              ),
+              visualizerConfig: const VoiceVisualizerConfig(
+                useRandomHeights: true,
+                enableBarAnimations: false,
+              ),
+              textConfig: VoiceTextConfig(
+                  counterTextStyle: const TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w400,
+                height: .1,
+              )),
+              containerConfig: const VoiceContainerConfig(
+                borderRadius: 10,
+              ),
             );
           },
           itemCount: voicesList.length,

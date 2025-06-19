@@ -37,6 +37,9 @@ class VoiceStateModel {
   /// Whether the animation is currently running
   final bool isAnimating;
 
+  /// Whether the voice message has been listened to (played at least once)
+  final bool isListened;
+
   /// Creates a new [VoiceStateModel]
   const VoiceStateModel({
     required this.playStatus,
@@ -49,12 +52,14 @@ class VoiceStateModel {
     required this.remainingTimeText,
     required this.speedDisplayText,
     required this.isAnimating,
+    required this.isListened,
   });
 
   /// Creates an initial state for the voice player
   factory VoiceStateModel.initial({
     Duration? maxDuration,
     String? id,
+    bool isListened = false,
   }) {
     final initialMaxDuration = maxDuration ?? const Duration(days: 1);
     return VoiceStateModel(
@@ -68,6 +73,7 @@ class VoiceStateModel {
       remainingTimeText: _formatDuration(initialMaxDuration),
       speedDisplayText: PlaySpeed.x1.displayString,
       isAnimating: false,
+      isListened: isListened,
     );
   }
 
@@ -127,6 +133,7 @@ class VoiceStateModel {
     String? speedDisplayText,
     bool? isAnimating,
     double? animationValue,
+    bool? isListened,
   }) {
     return VoiceStateModel(
       playStatus: playStatus ?? this.playStatus,
@@ -139,6 +146,7 @@ class VoiceStateModel {
       remainingTimeText: remainingTimeText ?? this.remainingTimeText,
       speedDisplayText: speedDisplayText ?? this.speedDisplayText,
       isAnimating: isAnimating ?? this.isAnimating,
+      isListened: isListened ?? this.isListened,
     );
   }
 
@@ -163,7 +171,8 @@ class VoiceStateModel {
         other.maxMillSeconds == maxMillSeconds &&
         other.remainingTimeText == remainingTimeText &&
         other.speedDisplayText == speedDisplayText &&
-        other.isAnimating == isAnimating;
+        other.isAnimating == isAnimating &&
+        other.isListened == isListened;
   }
 
   @override
@@ -179,6 +188,7 @@ class VoiceStateModel {
       remainingTimeText,
       speedDisplayText,
       isAnimating,
+      isListened,
     );
   }
 }
