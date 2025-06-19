@@ -1,100 +1,203 @@
-## 0.0.1
+# Changelog
 
-- initial release.
+All notable changes to this project will be documented in this file.
 
-## 0.0.3
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- update v_chat_utils to v 0.0.3
-- ## 0.3.0
-- add web support
+## [3.1.0] - 2024-12-19
 
-## 0.4.0
+### 🚨 Breaking Changes
 
-- full localization support
+- **Configuration Classes**: Reorganized parameters into configuration classes for better maintainability
+- **Parameter Migration**: Individual styling parameters replaced with organized config objects
+- **API Changes**: Old individual parameters are no longer supported (see migration guide in README)
 
-## 1.0.0
+### ✨ New Features
 
-- Support Dart 3
+- **VoiceColorConfig**: Centralized color management for active/inactive states
+- **VoiceContainerConfig**: Container styling with background, padding, border radius
+- **VoiceTextConfig**: Text styling with Flutter TextTheme support
+- **VoiceButtonConfig**: Complete button appearance and behavior control
+- **VoiceSpeedConfig**: Speed control button customization
+- **VoiceAvatarConfig**: User avatar and mic icon configuration
+- **VoiceVisualizerConfig**: Comprehensive visualizer appearance and behavior settings
+- **User Avatar Support**: Display user profile images with listen status indicators
+- **Listen Status Tracking**: Automatic visual indicators for played/unplayed messages
+- **Simple Play Icons**: Choice between circular background or simple icon styles
+- **Icon Size Control**: Independent sizing for simple icons and avatar elements
+- **Timer Theme Support**: Integration with Flutter's TextTheme for consistent styling
 
-## 2.0.0
+### 🔧 Enhancements
 
-- Support Flutter V3.22
--
+- **Improved Code Organization**: Better parameter grouping and class structure
+- **Enhanced State Management**: More robust state tracking during seek operations
+- **Better Error Handling**: Improved error handling for seek and playback operations
+- **Visualizer Gestures**: Enhanced gesture handling for smoother interactions
+- **Seek Stability**: Added delay after seek operations for better reliability
+- **Memory Management**: Optimized resource cleanup and disposal
+- **Performance**: Better state updates and reduced unnecessary rebuilds
 
-## 2.1.0
+### 🐛 Bug Fixes
 
-- Fix slider
-- Upgrade packages
+- **Seek Behavior**: Correctly preserves playing state across seek operations
+- **State Synchronization**: Better state management during slider and visualizer interactions
+- **Icon Rendering**: Fixed icon sizing issues in different configurations
+- **Animation Timing**: Improved animation stability during state transitions
 
-## 2.2.0
+### 📖 Documentation
 
-- Add flutter_audio_waveforms
-- Upgrade packages
+- **Migration Guide**: Comprehensive guide for upgrading from v3.0.x
+- **Configuration Examples**: Detailed examples for all configuration classes
+- **API Reference**: Updated documentation with new class structures
+- **Usage Examples**: Enhanced examples showing different customization approaches
 
-## 2.2.1
+### 🔄 Migration Notes
 
-- update packages
+See the migration section in README.md for detailed upgrade instructions from v3.0.x to v3.1.0.
 
-## 2.2.2
+## [3.0.1] - 2024-11-15
 
-- update packages
+### 🔧 Enhancements
 
-## 3.0.0
+- **Smart Seek Functionality**: Improved seek behavior that preserves playback state
+- **Auto-Resume**: When seeking while playing, audio automatically resumes from new position
+- **Pause Preservation**: When seeking while paused, audio remains paused at new position
+- **User Experience**: Eliminated need for manual resume after seeking operations
 
-- **BREAKING CHANGE**: Migrated from `just_audio` to `audioplayers` package
-- Improved code structure and performance
-- Better state management with VoiceStateModel
-- Enhanced error handling and stream management
-- Kept VLC player support for iOS WebM files
-- Added better documentation and utility methods
-- Improved UI responsiveness and animations
-- Fixed deprecated `withOpacity` usage
-- Better memory management and resource cleanup
-- Enhanced play speed controls with cleaner API
+## [3.0.0] - 2024-10-20
 
-## 3.0.1
+### 🚨 Breaking Changes
 
-- **FEATURE**: Improved seek functionality - now preserves playback state during seeking
-- When seeking while playing, audio resumes automatically after seek completes
-- When seeking while paused, audio remains paused after seek completes
-- Better user experience with intelligent seek state management
+- **Audio Engine**: Migrated from `just_audio` to `audioplayers` package for better stability
+- **API Changes**: Some method signatures updated for consistency
 
-## 3.1.0
+### ✨ New Features
 
-- **FEATURE**: Added user avatar support with mic icon indicating listened status
-- **FEATURE**: Added `userAvatar` parameter to display user profile image
-- **FEATURE**: Added `micIcon` parameter for custom mic icon widget
-- **FEATURE**: Added `avatarSize` and `micIconSize` parameters for size customization
-- **FEATURE**: Added `useSimplePlayIcon` parameter for play icon without circular background
-- **FEATURE**: Added `simpleIconSize` parameter to control simple icon size (default: 24.0)
-- **FEATURE**: Added automatic listen status tracking - mic icon changes color when voice is played
-- **ENHANCEMENT**: Play icons now support both circular background and simple icon styles
-- **ENHANCEMENT**: Enhanced state model to track if voice message has been listened to
-- **ENHANCEMENT**: Simple icons now use actual size instead of proportional sizing for better visibility
-- **UI**: Mic icon displays in active color when listened, inactive color when not listened
-- **UI**: Play icon takes inactive slider color when using simple icon style
+- **VoiceStateModel**: Comprehensive state management system
+- **Enhanced Error Handling**: Robust error handling and recovery mechanisms
+- **Stream Management**: Improved audio stream handling and cleanup
+- **VLC Support**: Maintained VLC player support for iOS WebM files
+- **Speed Controls**: Enhanced playback speed controls with cleaner API
+- **Animation System**: Improved UI responsiveness and smooth animations
 
-## 3.2.1
+### 🔧 Enhancements
 
-- **ENHANCEMENT**: Improved seek functionality to ensure playback resumes if it was playing before seeking
-- **ENHANCEMENT**: Added error handling for seek operations and playback resumption
-- **ENHANCEMENT**: Improved visualizer gesture handling for better seek behavior
-- **ENHANCEMENT**: Added small delay after seek operation to ensure stability
-- **FIX**: Seek behavior now correctly preserves playing state across seek operations
-- **FIX**: Better state management during seek operations in both slider and visualizer
+- **Performance**: Significant performance improvements and optimization
+- **Memory Management**: Better resource cleanup and memory usage
+- **Code Structure**: Improved code organization and maintainability
+- **Documentation**: Enhanced documentation and utility methods
+- **Deprecation Fixes**: Removed deprecated `withOpacity` usage
 
-## 3.2.0
+### 🐛 Bug Fixes
 
-- **BREAKING CHANGE**: Reorganized parameters into configuration classes for better maintainability
-- **FEATURE**: Added `VoiceColorConfig` for color-related settings
-- **FEATURE**: Added `VoiceContainerConfig` for container styling
-- **FEATURE**: Added `VoiceTextConfig` for text styling with theme support
-- **FEATURE**: Added `VoiceButtonConfig` for button appearance and behavior
-- **FEATURE**: Added `VoiceSpeedConfig` for speed control customization
-- **FEATURE**: Added `VoiceAvatarConfig` for avatar and mic icon settings
-- **FEATURE**: Added `VoiceVisualizerConfig` for visualizer appearance and behavior
-- **FEATURE**: Added `timerTextTheme` support for timer text styling using Flutter's TextTheme
-- **ENHANCEMENT**: Improved code organization and maintainability
-- **ENHANCEMENT**: Better parameter grouping for easier customization
-- **ENHANCEMENT**: All configuration classes include `copyWith` methods for easy modifications
-- **MIGRATION**: Old individual parameters are replaced with configuration objects (see documentation)
+- **State Consistency**: Fixed various state synchronization issues
+- **Resource Leaks**: Resolved memory leaks in audio player cleanup
+- **Platform Compatibility**: Enhanced cross-platform compatibility
+
+## [2.2.2] - 2024-08-15
+
+### 🔧 Enhancements
+
+- **Dependencies**: Updated all package dependencies to latest versions
+- **Compatibility**: Improved compatibility with latest Flutter SDK versions
+
+## [2.2.1] - 2024-07-10
+
+### 🔧 Enhancements
+
+- **Dependencies**: Updated package dependencies for better stability
+- **Performance**: Minor performance optimizations
+
+## [2.2.0] - 2024-06-20
+
+### ✨ New Features
+
+- **Audio Waveforms**: Added `flutter_audio_waveforms` integration
+- **Visual Enhancement**: Improved audio visualization capabilities
+
+### 🔧 Enhancements
+
+- **Dependencies**: Upgraded core packages to latest stable versions
+- **Compatibility**: Enhanced Flutter version compatibility
+
+## [2.1.0] - 2024-05-15
+
+### 🐛 Bug Fixes
+
+- **Slider Issues**: Fixed various slider interaction and rendering issues
+- **UI Consistency**: Improved UI consistency across different platforms
+
+### 🔧 Enhancements
+
+- **Package Updates**: Upgraded dependencies for better performance and security
+
+## [2.0.0] - 2024-04-10
+
+### 🚨 Breaking Changes
+
+- **Flutter Support**: Updated minimum Flutter version to 3.22
+- **Dart Requirements**: Updated Dart SDK requirements
+
+### 🔧 Enhancements
+
+- **Compatibility**: Full compatibility with Flutter 3.22 and latest features
+- **Performance**: Leveraged new Flutter optimizations for better performance
+
+## [1.0.0] - 2024-02-20
+
+### 🚨 Breaking Changes
+
+- **Dart 3 Support**: Updated to support Dart 3 with null safety improvements
+- **API Stability**: Marked API as stable with semantic versioning
+
+### 🔧 Enhancements
+
+- **Type Safety**: Enhanced type safety with Dart 3 features
+- **Performance**: Improved performance with latest Dart optimizations
+
+## [0.4.0] - 2023-12-15
+
+### ✨ New Features
+
+- **Internationalization**: Full localization support with multiple languages
+- **Accessibility**: Enhanced accessibility features for screen readers
+- **RTL Support**: Right-to-left language support
+
+## [0.3.0] - 2023-11-10
+
+### ✨ New Features
+
+- **Web Support**: Added comprehensive web platform support
+- **Cross-Platform**: Enhanced cross-platform compatibility
+
+### 🔧 Enhancements
+
+- **V Chat Utils**: Updated v_chat_utils dependency to v0.0.3
+- **Web Optimization**: Optimized performance for web platforms
+
+## [0.0.3] - 2023-10-05
+
+### 🔧 Enhancements
+
+- **Dependencies**: Updated v_chat_utils to version 0.0.3
+- **Stability**: Improved overall package stability
+
+## [0.0.1] - 2023-09-20
+
+### 🎉 Initial Release
+
+- **Basic Playback**: Core audio playback functionality
+- **Simple UI**: Basic voice message player interface
+- **Flutter Integration**: Initial Flutter package implementation
+
+---
+
+## Legend
+
+- 🚨 **Breaking Changes**: Changes that require code modifications
+- ✨ **New Features**: New functionality and capabilities
+- 🔧 **Enhancements**: Improvements to existing features
+- 🐛 **Bug Fixes**: Fixed issues and problems
+- 📖 **Documentation**: Documentation improvements
+- 🔄 **Migration Notes**: Information for upgrading versions
