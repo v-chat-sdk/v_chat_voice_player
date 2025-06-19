@@ -10,7 +10,7 @@ V Chat Voice Player is a Flutter package designed to provide a seamless and cust
 - **Seek Bar:** Intuitive seek bar to navigate through the audio with real-time progress updates.
 - **Speed Control:** Adjust playback speed with customizable speed options.
 - **Noise Visualization:** Optional noise-based visualization to represent audio playback dynamically.
-- **Customizable UI:** Tailor the player’s appearance to match your app’s design with customizable icons and colors.
+- **Customizable UI:** Tailor the player's appearance to match your app's design with customizable icons and colors.
 - **Cross-Platform Support:** Works seamlessly on both Android and iOS platforms.
 
 ## 🔧 Installation
@@ -21,7 +21,7 @@ Add `v_chat_voice_player` to your `pubspec.yaml` dependencies:
 dependencies:
   flutter:
     sdk: flutter
-  v_chat_voice_player: ^1.0.0
+  v_chat_voice_player: ^3.0.0
 ```
 
 Then, run `flutter pub get` to install the package.
@@ -144,6 +144,22 @@ VPlatformFile(
 ```
 
 **Note:** Seeking with bytes source is not supported.
+
+## 🔧 Seek Functionality
+
+The voice player includes intelligent seek functionality that preserves playback state:
+
+- **Playing + Seek**: When you seek while audio is playing, it automatically resumes playing from the new position
+- **Paused + Seek**: When you seek while audio is paused, it remains paused at the new position
+- **Smooth UX**: No need to manually resume playback after seeking
+
+```dart
+// The seek functionality works automatically with the slider
+VVoiceMessageView(
+  controller: _voiceController,
+  // Seek behavior is handled internally - no additional setup needed
+)
+```
 
 ## 🚧 Customization
 
@@ -271,34 +287,3 @@ VVoiceMessageView({
   double noiseWidthPercentage = 50.5,
 })
 ```
-
-- **controller:** Instance of `VVoiceMessageController`.
-- **activeSliderColor:** Color of the active part of the seek bar.
-- **notActiveSliderColor:** Color of the inactive part of the seek bar.
-- **backgroundColor:** Background color of the player container.
-- **counterTextStyle:** Text style for the remaining time counter.
-- **playIcon:** Custom widget for the play icon.
-- **pauseIcon:** Custom widget for the pause icon.
-- **errorIcon:** Custom widget for the error icon.
-- **speedBuilder:** Function to build a custom speed display widget.
-- **noiseWidthPercentage:** Width of the noise visualization as a percentage of screen width.
-
-## 🖼️ Example
-
-Here's a complete example integrating the `VChatVoicePlayer` into a Flutter application:
-
-```dart
-import 'package:flutter/material.dart';
-import 'package:v_chat_voice_player/v_chat_voice_player.dart';
-import 'package:v_platform/v_platform.dart';
-
-void main() {
-  runApp
-    (
-        MaterialApp(
-        home: Scaffold(
-            appBar: AppBar(title: Text('Voice Message Player')),
-            body: VoiceMessageExample(),
-        ),
-        ),
-    );

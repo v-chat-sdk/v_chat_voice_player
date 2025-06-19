@@ -80,11 +80,12 @@ class HomeViewState extends State<HomeView> {
               voicesList.insert(
                 0,
                 VoiceMessageModel(
-                    id: "${DateTime.now().millisecond}",
-                    dataSource: VPlatformFile.fromUrl(
-                      networkUrl:
-                          "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3",
-                    )),
+                  id: "${DateTime.now().millisecond}",
+                  dataSource: VPlatformFile.fromUrl(
+                    networkUrl:
+                        "https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.mp3",
+                  ),
+                ),
               );
               setState(() {});
             },
