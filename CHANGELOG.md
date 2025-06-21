@@ -5,7 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2024-12-20
+
+### 🔧 Enhancements
+
+- **Voice Visualizer Touch Handling**: Completely redesigned touch interaction system for the voice visualizer
+- **Hidden Native Slider**: Implemented hidden Flutter Slider behind visualizer bars for superior touch handling
+- **Improved Gesture Recognition**: Replaced manual gesture detection with native Flutter slider behavior
+- **Better Seek Performance**: Enhanced seeking accuracy and responsiveness using platform-optimized gestures
+- **Accessibility Support**: Inherited native slider accessibility features for better screen reader support
+- **Smoother UX**: Users now experience familiar Flutter slider behavior while maintaining custom visualizer appearance
+
+### 🐛 Bug Fixes
+
+- **Touch Precision**: Fixed touch precision issues in voice visualizer seeking
+- **Gesture Conflicts**: Resolved gesture detection conflicts and edge cases
+- **Performance**: Eliminated manual position calculations that could cause lag
+
+### 📱 User Experience
+
+- **Native Feel**: Voice visualizer now behaves exactly like standard Flutter sliders
+- **Visual Consistency**: Maintained beautiful waveform visualization while improving functionality
+- **Touch Responsiveness**: Significantly improved touch responsiveness and accuracy
+
 ## [3.1.1] - 2024-12-19
+
 Refactor: Extract audio, VLC, and cache services
 
 This commit introduces three new service classes to improve the organization and maintainability of audio-related functionalities:

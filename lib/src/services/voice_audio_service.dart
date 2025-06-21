@@ -82,7 +82,6 @@ class VoiceAudioService {
   /// Initializes audio source and prepares for playback
   Future<void> setSource(VPlatformFile audioSrc) async {
     try {
-      final path = await _cacheService.getFileFromCache(audioSrc);
       final source = await createAudioSource(audioSrc);
       await _audioPlayer.setSource(source);
     } catch (error) {

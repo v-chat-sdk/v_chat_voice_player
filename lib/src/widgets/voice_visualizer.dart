@@ -8,7 +8,7 @@ import '../voice_state_model.dart';
 import '../voice_message_controller.dart';
 
 /// A widget that displays an animated voice waveform visualization
-/// with interactive seeking functionality
+/// with interactive seeking functionality using a hidden native Flutter Slider
 class VoiceVisualizer extends StatefulWidget {
   /// The controller managing the voice message playback
   final VVoiceMessageController controller;
@@ -125,6 +125,8 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
   }
 
   void _handlePlayStateChange() {
+    if (!mounted) return;
+
     if (widget.state.isPlaying && widget.enableAnimation) {
       _startAnimation();
     } else {
@@ -143,14 +145,16 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
     if (_isAnimating) {
       _isAnimating = false;
       for (final controller in _barAnimationControllers) {
-        controller.stop();
-        controller.reset();
+        if (mounted) {
+          controller.stop();
+          controller.reset();
+        }
       }
     }
   }
 
   void _animateRandomBars() {
-    if (!_isAnimating) return;
+    if (!_isAnimating || !mounted) return;
 
     final random = math.Random();
     final barsToAnimate = random.nextInt(5) + 3; // 3-7 bars
@@ -159,9 +163,9 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
       final barIndex = random.nextInt(widget.barCount);
       final controller = _barAnimationControllers[barIndex];
 
-      if (!controller.isAnimating) {
+      if (!controller.isAnimating && mounted) {
         controller.forward().then((_) {
-          if (_isAnimating) {
+          if (_isAnimating && mounted) {
             controller.reverse();
           }
         });
@@ -170,60 +174,18 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
 
     // Schedule next animation
     Future.delayed(Duration(milliseconds: random.nextInt(300) + 100), () {
-      if (_isAnimating) {
+      if (_isAnimating && mounted) {
         _animateRandomBars();
       }
     });
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final localPosition = renderBox.globalToLocal(details.globalPosition);
-    final progress = (localPosition.dx / renderBox.size.width).clamp(0.0, 1.0);
-
-    final seekPosition = Duration(
-      milliseconds: (progress * widget.state.maxMillSeconds).toInt(),
-    );
-
-    // Start seeking first
-    widget.controller
-        .onChangeSliderStart(progress * widget.state.maxMillSeconds);
-    // Update position
-    widget.controller.onChanging(progress * widget.state.maxMillSeconds);
-    // Complete the seek
-    widget.controller.onSeek(seekPosition);
-  }
-
-  void _handlePanStart(DragStartDetails details) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final localPosition = renderBox.globalToLocal(details.globalPosition);
-    final progress = (localPosition.dx / renderBox.size.width).clamp(0.0, 1.0);
-    widget.controller
-        .onChangeSliderStart(progress * widget.state.maxMillSeconds);
-  }
-
-  void _handlePanUpdate(DragUpdateDetails details) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final localPosition = renderBox.globalToLocal(details.globalPosition);
-    final progress = (localPosition.dx / renderBox.size.width).clamp(0.0, 1.0);
-    widget.controller.onChanging(progress * widget.state.maxMillSeconds);
-  }
-
-  void _handlePanEnd(DragEndDetails details) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final localPosition = renderBox.globalToLocal(details.globalPosition);
-    final progress = (localPosition.dx / renderBox.size.width).clamp(0.0, 1.0);
-
-    final seekPosition = Duration(
-      milliseconds: (progress * widget.state.maxMillSeconds).toInt(),
-    );
-
-    // Complete the seek operation
-    widget.controller.onSeek(seekPosition);
-  }
-
   @override
   void dispose() {
+    // Stop animations before disposing
+    _stopAnimation();
+
+    // Dispose all animation controllers
     _animationController.dispose();
     for (final controller in _barAnimationControllers) {
       controller.dispose();
@@ -233,22 +195,62 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onPanStart: _handlePanStart,
-      onPanUpdate: _handlePanUpdate,
-      onPanEnd: _handlePanEnd,
-      child: CustomPaint(
-        size: Size(double.infinity, widget.height),
-        painter: _VoiceVisualizerPainter(
-          barHeights: _barHeights,
-          progress: widget.state.progress,
-          activeColor: widget.activeColor,
-          inactiveColor: widget.inactiveColor,
-          barSpacing: widget.barSpacing,
-          barAnimations: _barAnimations,
-          isPlaying: widget.state.isPlaying && widget.enableAnimation,
-        ),
+    // Create a custom slider theme with transparent appearance
+    final hiddenSliderTheme = SliderTheme.of(context).copyWith(
+      activeTrackColor: Colors.transparent,
+      inactiveTrackColor: Colors.transparent,
+      thumbColor: Colors.transparent,
+      overlayColor: Colors.transparent,
+      trackHeight: widget.height,
+      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 0.0),
+      overlayShape: const RoundSliderOverlayShape(overlayRadius: 0.0),
+      trackShape: const RoundedRectSliderTrackShape(),
+    );
+
+    return SizedBox(
+      height: widget.height,
+      child: Stack(
+        children: [
+          // Hidden Flutter Slider for native touch handling
+          Positioned.fill(
+            child: SliderTheme(
+              data: hiddenSliderTheme,
+              child: Opacity(
+                opacity: 0.0, // Completely hidden
+                child: Slider(
+                  value: widget.state.currentMillSeconds
+                      .clamp(0.0, widget.state.maxMillSeconds),
+                  min: 0.0,
+                  max: widget.state.maxMillSeconds,
+                  onChangeStart: widget.controller.onChangeSliderStart,
+                  onChanged: widget.controller.onChanging,
+                  onChangeEnd: (value) {
+                    widget.controller
+                        .onSeek(Duration(milliseconds: value.toInt()));
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // Visual bars (non-interactive)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                size: Size(double.infinity, widget.height),
+                painter: _VoiceVisualizerPainter(
+                  barHeights: _barHeights,
+                  progress: widget.state.progress,
+                  activeColor: widget.activeColor,
+                  inactiveColor: widget.inactiveColor,
+                  barSpacing: widget.barSpacing,
+                  barAnimations: _barAnimations,
+                  isPlaying: widget.state.isPlaying && widget.enableAnimation,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
