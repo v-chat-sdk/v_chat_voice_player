@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3] - 2024-12-20
+
+### 🐛 Bug Fixes
+
+- **Web Platform Support**: Fixed audio playback on web platform by using UrlSource directly instead of cached file paths
+- **Cross-Platform Compatibility**: Improved audio source handling to work correctly across all supported platforms
+
+### 🔧 Enhancements
+
+- **Platform Detection**: Enhanced audio source creation logic with proper web platform detection
+- **Error Handling**: Improved error handling in audio source creation process
+
 ## [3.1.2] - 2024-12-20
 
 ### 🔧 Enhancements

@@ -84,10 +84,19 @@ class HomeViewState extends State<HomeView> {
                           ),
                           visualizerConfig: const VoiceVisualizerConfig(
                             useRandomHeights: true,
-                            enableBarAnimations: false,
+                            enableBarAnimations: true,
+                            barCount: 20,
                           ),
                           containerConfig: const VoiceContainerConfig(
                             borderRadius: 10,
+                            backgroundColor: Colors.transparent,
+                          ),
+                          buttonConfig: VoiceButtonConfig(
+                            useSimplePlayIcon: true,
+                          ),
+                          avatarConfig: VoiceAvatarConfig(
+                            userAvatar: Icon(Icons.ac_unit),
+
                           ),
                         ),
                       ),

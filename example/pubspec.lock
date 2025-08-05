@@ -502,7 +502,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "3.1.1"
+    version: "3.1.2"
   v_platform:
     dependency: "direct main"
     description:

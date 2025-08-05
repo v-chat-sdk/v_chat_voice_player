@@ -72,8 +72,14 @@ class VoiceAudioService {
     } else if (audioSrc.isFromBytes) {
       return BytesSource(Uint8List.fromList(audioSrc.bytes!));
     } else if (audioSrc.isFromUrl) {
-      final path = await _cacheService.getFileFromCache(audioSrc);
-      return DeviceFileSource(path);
+      // On web platform, use UrlSource directly instead of cached file path
+      // because web browsers can't access local file paths
+      if (kIsWeb) {
+        return UrlSource(audioSrc.fullNetworkUrl!);
+      } else {
+        final path = await _cacheService.getFileFromCache(audioSrc);
+        return DeviceFileSource(path);
+      }
     } else {
       throw Exception('Unsupported audio source type');
     }
