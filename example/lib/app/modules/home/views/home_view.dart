@@ -47,6 +47,9 @@ class HomeViewState extends State<HomeView> {
       ),
       body: Column(
         children: [
+          SimpleBuilder(
+            builder: (p0) => SizedBox(),
+          ),
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(30),
@@ -96,7 +99,6 @@ class HomeViewState extends State<HomeView> {
                           ),
                           avatarConfig: VoiceAvatarConfig(
                             userAvatar: Icon(Icons.ac_unit),
-
                           ),
                         ),
                       ),

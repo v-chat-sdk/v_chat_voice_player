@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.4] - 2025-10-15
+
+### 🔧 Enhancements
+
+- **Android 16K Page Size Support**: Updated flutter_vlc_player to v7.4.4 to support Android 16KB page size
+- **Dependencies**: Updated flutter_vlc_player from 7.4.3 to 7.4.4 for improved Android compatibility
+
 ## [3.1.3] - 2024-12-20
 
 ### 🐛 Bug Fixes
